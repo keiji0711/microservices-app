@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  user_service:
+    build: ./user_service
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./user_service:/app
+    depends_on:
+      db:
+        condition: service_healthy  # Wait for DB health check
+
+  order_service:
+    build: ./order_service
+    ports:
+      - "5002:5000"
+    volumes:
+      - ./order_service:/app
+    depends_on:
+      db:
+        condition: service_healthy  # Wait for DB health check
+
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: microservices_db
+    ports:
+      - "5432:5432"
+    healthcheck:  # Add health check to ensure PostgreSQL is ready
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "microservices_db"]
+      interval: 5s
+      retries: 5
+      start_period: 10s
